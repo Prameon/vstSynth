@@ -25,5 +25,6 @@ public:
 private:
    
     juce::dsp::Oscillator<float> Osc1 { [](float x) { return std::sin(x); } }; //sin
+    juce::dsp::Gain<float> gain; //Громкость
 };
 
