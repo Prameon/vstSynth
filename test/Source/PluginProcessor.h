@@ -56,10 +56,29 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
+    juce::AudioProcessorValueTreeState& getValueTree() { return apvts; }
 private:
-    const int NumberVoice {16};
-    juce::Synthesiser synth;
+    /*Создание Синтезатора*/
+    const int NumberVoice {16}; 
+    juce::Synthesiser synth;   
+    /*
+    Количество голосов в synth будет 16,
+    Создание Синтезатора (для того чтобы он играл нужно создать juce::SynthesiserVoice, juce::SynthesiserSound)
+    Создал и подключил #include "Sound.h", #include "Voice.h"  
+    */
 
+
+    /*Дерево значений параметров.*/
+    juce::AudioProcessorValueTreeState apvts;
+    juce::AudioProcessorValueTreeState::ParameterLayout createParameters();
+    void setParams(); 
+    /*
+    Создал Дерево значений параметров. (apvts)
+    функция createParameters() создание самих параметров и значений.
+    
+    setParams() моя функция для передачи параметров из дерева в voice
+    */
+ 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TestAudioProcessor)
 };

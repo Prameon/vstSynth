@@ -19,14 +19,17 @@ TestAudioProcessor::TestAudioProcessor()
                       #endif
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                      #endif
-                       )
+                       ), apvts(*this, nullptr, "Parameters", createParameters())
 #endif
 {
-    synth.addSound(new Sound());
+    synth.clearVoices();
     for (int i = 0; i < NumberVoice; i++)
     {
         synth.addVoice(new Voice());
     }
+
+    synth.clearSounds();
+    synth.addSound(new Sound());
 }
 
 TestAudioProcessor::~TestAudioProcessor()
@@ -154,24 +157,11 @@ void TestAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::M
     // this code if your algorithm always overwrites all the output channels.
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
+   
 
-    // This is the place where you'd normally do the guts of your plugin's
-    // audio processing...
-    // Make sure to reset the state if your inner loop is processing
-    // the samples and the outer loop is handling the channels.
-    // Alternatively, you can process the samples with the channels
-    // interleaved by keeping the same state.
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
-    {
-        auto* channelData = buffer.getWritePointer (channel);
-
-        // ..do something to the data...
-    }
-
-
-
-
-
+    
+    setParams();
+    buffer.clear();
     synth.renderNextBlock(buffer, midiMessages, 0, buffer.getNumSamples());
 }
 
@@ -200,9 +190,35 @@ void TestAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
     // whose contents will have been created by the getStateInformation() call.
 }
 
+
+
+juce::AudioProcessorValueTreeState::ParameterLayout TestAudioProcessor::createParameters()
+{
+    std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
+
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("GAIN", "Gain", juce::NormalisableRange<float> { -80.00f, 0.00f, 0.01f }, -25.00, "dB"));
+
+    return { params.begin(), params.end() };
+}
+
+void TestAudioProcessor::setParams()
+{
+    for (int i = 0; i < synth.getNumVoices(); i++)
+    {
+        if (auto voice = dynamic_cast<Voice*>(synth.getVoice(i)))
+        {
+            float* gain = (float*)apvts.getRawParameterValue("GAIN");
+            voice->setGain(gain);
+        }
+    }
+}
+
+
 //==============================================================================
 // This creates new instances of the plugin..
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new TestAudioProcessor();
 }
+
+

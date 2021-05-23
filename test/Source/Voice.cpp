@@ -30,6 +30,10 @@ void Voice::pitchWheelMoved(int newPitchWheelValue)
 {
 }
 
+void Voice::setGain(float* gain)
+{
+    this->Gain = *gain;  
+}
 
 void Voice::prepareToPlay(double sampleRate, int samplesPerBlock, int outputChannels)
 {
@@ -38,16 +42,16 @@ void Voice::prepareToPlay(double sampleRate, int samplesPerBlock, int outputChan
     spec.sampleRate = sampleRate;
     spec.numChannels = outputChannels;
     Osc1.prepare(spec);
-    Osc1.setFrequency(220.0f); //hz
-  
     gain.prepare(spec);
-    gain.setGainLinear(0.1f); //dB
-
 }
 
 void Voice::renderNextBlock(juce::AudioBuffer< float >& outputBuffer, int startSample, int numSamples)
 {
     juce::dsp::AudioBlock<float> audioBlock{ outputBuffer };
+    Osc1.setFrequency(220.0f); //hz
     Osc1.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
+
+    gain.setGainDecibels(Gain);  // принимает dB  
     gain.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
 }
+
